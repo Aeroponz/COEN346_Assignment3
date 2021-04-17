@@ -2,7 +2,7 @@ public class MemorySlot {
     // ---- CONSTRUCTOR ----
     public MemorySlot(Page initialPage, int clockTime){
         page = initialPage;
-        lastAccessTime = clockTime; 
+        lastAccessTime = clockTime;
     }
 
     public MemorySlot(){
@@ -14,11 +14,11 @@ public class MemorySlot {
     public String getId() {
         return page.getId();
     }
-    public long read(int clockTime) {
+    public long read(long clockTime) {
         lastAccessTime = clockTime;
         return page.getValue();
     }
-    public int lastAccessTime() {
+    public long lastAccessTime() {
         return lastAccessTime;
     }
     public boolean pageLockState() {
@@ -26,7 +26,7 @@ public class MemorySlot {
     }
 
     // ---- SETTERS ----
-    public void write(Page newPage, int clockTime) {
+    public void write(Page newPage, long clockTime) {
         lastAccessTime = clockTime;
         page = newPage;
     }
@@ -38,5 +38,5 @@ public class MemorySlot {
     
     // ---- ATTRIBUTES ----
     private Page page;
-    private int lastAccessTime;
+    private long lastAccessTime;
 }

@@ -1,11 +1,8 @@
-import java.util.*; 
+import java.util.*;
+import java.util.concurrent.locks.*;
 import java.nio.charset.StandardCharsets; 
 import java.nio.file.*; 
 import java.io.*;
-import java.util.logging.FileHandler;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
-import java.util.stream.IntStream;
 
 public class App {
 
@@ -15,46 +12,50 @@ public class App {
     private static final String memConfigFileName = "memconfig.txt";
     private static final String processesFileName = "processes.txt";
 
-    /* -- Clock -- */
-    private static int elapsedTime = 0;
+    /* -- Output File -- */
+    public static CustomLogger logger;
 
     /* -- Virtual Memory Manager -- */
-    private static VirtualMemoryManager vmm;
+    public static VirtualMemoryManager vmm;
 
     /* -- Processes -- */
-    private static ArrayList<Process> processes = new ArrayList<Process>();
+    public static ArrayList<Process> processes = new ArrayList<Process>();
 
     /* -- Commands -- */
-    private static ArrayList<Command> commands = new ArrayList<Command>();
+    public static Queue<Command> commands = new LinkedList<Command>();
 
     /* -- CPU -- */
-    private static int CPU_CORES;
+    public static int CPU_CORES;
 
-    private static Process[] runningJobs;
+    public static ArrayList<Process> runningJobs = new ArrayList<Process>();
 
     /* -- Scheduler -- */
-    private static ArrayList<Process> readyQueue = new ArrayList<Process>();
+    public static ArrayList<Process> readyQueue = new ArrayList<Process>();
+
+    /* -- Locks -- */
+    public static ReadWriteLock readyQueueLock = new ReentrantReadWriteLock();
+    public static ReadWriteLock vmmLock = new ReentrantReadWriteLock();
 
 
     public static void main(String[] args) throws Exception {
 
         // Read input file and setup virtual memory manager
         readInputFile();
-        ALogger a_logger = new ALogger();
+        logger = new CustomLogger();
 
         /* 3 Tasks -> 3 Threads. */
         // Thread 1: Clock - Timer 1000ms
-        Clock_Tick checkForNewProcess = new Clock_Tick();
+        Clock_Tick clock = new Clock_Tick();
         // Thread 2: Memory Management Unit - Timer 1000ms (Initial delay of 50ms)
-        MemoryManagementUnit memoryManagementUnit = new MemoryManagementUnit(a_logger);
+        MemoryManagementUnit memoryManagementUnit = new MemoryManagementUnit(logger);
         // Thread 3: Scheduler - Timer 1000ms (Initial delay of 500ms, this way scheduler doesn't overlap with memory management unit)
-        Scheduler scheduler = new Scheduler(a_logger);
+        Scheduler scheduler = new Scheduler(logger);
 
         // Initialise Timer and start the threads
         Timer t = new Timer();
-        t.schedule(checkForNewProcess, 0, 1000);
+        t.schedule(clock, 0, 1000);
         t.schedule(memoryManagementUnit, 50, 1000);
-        t.schedule(scheduler, 500, 1000);
+        t.schedule(scheduler, 100, 1000);
     }
 
     /**
@@ -121,110 +122,23 @@ public class App {
             CPU_CORES = Integer.parseInt(processesLines.get(lineCounter++));
             int processCount = Integer.parseInt(processesLines.get(lineCounter++));
             for(int i = 0; i < processCount; i++){
-                processes.add(new Process(processesLines.get(lineCounter++)));
+                processes.add(new Process(processesLines.get(lineCounter++), i+1));
             }
         }
     }
 
-    public static void printToConsoleAndLog(ALogger logger, String msg) {
-        String timedStampedMsg = "Clock: " + elapsedTime + ", " + msg;
+    public static void printToConsoleAndLog(String msg) {
+        //String timedStampedMsg = "Clock: " + Clock_Tick.getClockTime() + ", " + msg;
+        String timedStampedMsg = "Clock: " + Clock_Tick.getClockTicks() + ", " + msg;
         logger.info(timedStampedMsg);
     }
 
-/**
- * Called on each clock thread tick
- */
-public static void clock_tick() {
-    elapsedTime++;
-}
-
-/**
- * Called on each memory management unit tick
- */
-public static void mmu_tick(ALogger a_logger) {
-    App.printToConsoleAndLog(a_logger, "MMU has ticked");
-}
-
-/**
- * Called on each scheduler tick
- */
-public static void scheduler_tick(ALogger a_logger) {
-    // Iterate through processes list to verify if a process must be added to the ready queue
-    IntStream.range(0, processes.size())
-        .filter(x -> processes.get(x).getReadyTime()== elapsedTime)
-        .map(x -> readyQueue.add(processes.get(x)))
-        .forEach(readyQueue.add(processes.get(x)));
-}
-}
-
-class ALogger {
-    BufferedWriter writer;
-    Logger logger;
-    final String outputFileName = "output.txt";
-
-    ALogger () throws IOException {
-
-        this.writer = new BufferedWriter(new FileWriter(outputFileName));
-
-
-        this.logger = Logger.getLogger("Virtual Memory Management Log");
-        FileHandler fh;
-
-        try {
-            // This block configure the logger with handler and formatter
-            fh = new FileHandler(outputFileName);
-            logger.addHandler(fh);
-            SimpleFormatter formatter = new SimpleFormatter();
-            fh.setFormatter(formatter);
-        }catch (SecurityException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+    public static Command nextCommand(){
+        if(!commands.isEmpty()){
+            var next = commands.remove();
+            commands.add(next);
+            return next;
         }
-    }
-
-    public void info(String s) {
-        try {
-            System.out.println(s);
-            this.writer.write(s + "\n");
-        } catch (IOException e) {
-        }
-    }
-
-    public void close() {
-        try {
-            this.writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-}
-
-class Clock_Tick extends TimerTask {
-    public Clock_Tick() {}
-    public void run() {
-       App.clock_tick();
-    }
-}
-
-class MemoryManagementUnit extends TimerTask {
-    private final ALogger a_logger;
-
-    public MemoryManagementUnit(ALogger a_logger) {
-        this.a_logger = a_logger;
-    }
-    public void run() {
-       App.mmu_tick(a_logger);
-    }
-}
-
-class Scheduler extends TimerTask {
-    private final ALogger a_logger;
-
-    public Scheduler(ALogger a_logger) {
-        this.a_logger = a_logger;
-    }
-    public void run() {
-       App.scheduler_tick(a_logger);
+        else throw new Error("No commands remaining");
     }
 }

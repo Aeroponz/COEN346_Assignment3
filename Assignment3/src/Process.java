@@ -1,11 +1,11 @@
 public class Process extends Thread {
     // ---- CONSTRUCTOR ----
-    public Process(String inputLine){
+    public Process(String inputLine, int ident){
         String[] splitInput = inputLine.split(" ");
         readyTime = Integer.parseInt(splitInput[0]);
         serviceTime = Integer.parseInt(splitInput[1]);
         remainingTime = serviceTime; 
-        identifier = splitInput[0];   
+        identifier = String.valueOf(ident);   
     }
 
     public Process(){
@@ -15,7 +15,7 @@ public class Process extends Thread {
     public Thread thread;
 
     public void startThread() {
-        thread = new Thread(new ParallelTask());
+        thread = new Thread(new ParallelTask(identifier, remainingTime));
         thread.setName("Thread " + identifier);
         thread.start();
         status = ProcessStatus.Running;
@@ -27,7 +27,7 @@ public class Process extends Thread {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        thread = new Thread(new ParallelTask());
+        thread = new Thread(new ParallelTask(identifier, remainingTime));
         thread.setName("Thread " + identifier);
         status = ProcessStatus.Ready;
     }
@@ -38,7 +38,7 @@ public class Process extends Thread {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        thread = new Thread(new ParallelTask());
+        thread = new Thread(new ParallelTask(identifier, remainingTime));
         thread.setName("Thread " + identifier);
         status = ProcessStatus.Finished;
     }
@@ -88,10 +88,72 @@ public class Process extends Thread {
 
 class ParallelTask implements Runnable{
 
+    String processName;
+    int remainingTime;
+
+    ParallelTask(String name, int remaining){
+        processName = name;
+        remainingTime = remaining;
+    }
+
     @Override
     public void run() {
-       System.out.println(Thread.currentThread().getName() + " has started");
-     
+        executeACommand();
+        // long min = 1000L;
+        // long max = 5000L;
+        // long random = min + (long) (Math.random() * (max - min));
+        // while(true){
+        //     if(random >= remainingTime * 1000){
+        //         break;
+        //     }
+        //     else
+        //     {
+        //         try {
+        //             Thread.sleep(random);
+        //         } catch (InterruptedException e) {
+        //             e.printStackTrace();
+        //         }
+        //         executeACommand();
+        //         random = min + (long) (Math.random() * (max - min));
+        //     }
+        // }
+    }
+
+    private void executeACommand(){
+        var command = App.nextCommand();
+        switch (command.type) {
+            case Store:
+                App.vmmLock.writeLock().lock();
+                try {
+                    App.vmm.Store(String.valueOf(command.variableId), command.variableValue, Clock_Tick.getClockTime());
+                } finally {
+                    App.vmmLock.writeLock().unlock();
+                }
+                break;
+            
+            case Release:
+                App.vmmLock.writeLock().lock();
+                try {
+                    App.vmm.Release(String.valueOf(command.variableId));
+                } finally {
+                    App.vmmLock.writeLock().unlock();
+                }
+                break;
+
+            case Lookup:
+                App.vmmLock.readLock().lock();
+                try {
+                    var value = App.vmm.Lookup(String.valueOf(command.variableId), Clock_Tick.getClockTime());
+                    command.variableValue = value;
+                } finally {
+                    App.vmmLock.readLock().unlock();
+                }
+                break;
+        
+            default:
+                throw new Error("Unkown Commands");
+        }
+        App.printToConsoleAndLog("Process " + processName + ", " + command.print());
     }
  
 }

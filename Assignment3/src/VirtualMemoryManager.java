@@ -7,14 +7,14 @@ public class VirtualMemoryManager {
         disk = new DiskStorage();
     }
 
-    public void Store(String variableId, long variableValue, int clockTime){
+    public void Store(String variableId, long variableValue, long clockTime){
         Page pageToStore = new Page(variableId, variableValue);
 
         int firstFreeIndexInMainMemory = getFirstFreeMainMemorySlotIndex();
         // There is a free slot in main memory, store it there
         if(firstFreeIndexInMainMemory != -1){
             // Check that lock is still opened
-            if(mainmemory.slots[firstFreeIndexInMainMemory].pageLockState()){
+            if(!mainmemory.slots[firstFreeIndexInMainMemory].pageLockState()){
                 mainmemory.slots[firstFreeIndexInMainMemory].toggleLock();
                 mainmemory.slots[firstFreeIndexInMainMemory].write(pageToStore, clockTime);
             }
@@ -41,7 +41,7 @@ public class VirtualMemoryManager {
         }
     }
 
-    public long Lookup(String variableId, int clockTime){
+    public long Lookup(String variableId, long clockTime){
         int index = getIndexOfPageById_MainMemory(variableId);
 
         // Variable is already in main memory, read it
@@ -77,7 +77,7 @@ public class VirtualMemoryManager {
         .orElse(-1);
     }
 
-    private void loadIntoMainMemory(Page pageToLoad, int clockTime){
+    private void loadIntoMainMemory(Page pageToLoad, long clockTime){
         int firstFreeIndexInMainMemory = getFirstFreeMainMemorySlotIndex();
         // There is a free slot in main memory, store it there
         if(firstFreeIndexInMainMemory != -1){
@@ -94,7 +94,7 @@ public class VirtualMemoryManager {
         //There is no free page in main memory. Swap with smallest last accessed time
         else{
             int indexOfSmallestLastAccessTime = 0;
-            int smallestLastAccessTime = mainmemory.slots[0].lastAccessTime();
+            long smallestLastAccessTime = mainmemory.slots[0].lastAccessTime();
             for (int i = 1; i < mainmemory.slots.length; i++) {
                 if(mainmemory.slots[i].lastAccessTime() < smallestLastAccessTime){
                     indexOfSmallestLastAccessTime = i;

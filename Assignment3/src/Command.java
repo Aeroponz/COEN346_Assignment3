@@ -11,6 +11,15 @@ public class Command {
         variableId = varId;
         variableValue = -1; 
     }
+
+    public String print(){
+        if(type != VMemCommandType.Release){
+            return type + ": Variable " + variableId + ", Value: " + variableValue;
+        }
+        else{
+            return type + ": Variable " + variableId;
+        }
+    }
     
     // ---- ATTRIBUTES ----
     public VMemCommandType type;
