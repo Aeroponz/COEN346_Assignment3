@@ -10,22 +10,28 @@ public class VirtualMemoryManager {
 
     public void Store(String variableId, long variableValue, long clockTime){
         Page pageToStore = new Page(variableId, variableValue);
-
-        int firstFreeIndexInMainMemory = getFirstFreeMainMemorySlotIndex();
-        // There is a free slot in main memory, store it there
-        if(firstFreeIndexInMainMemory != -1){
-            // Check that lock is still opened
-            if(!mainmemory.slots[firstFreeIndexInMainMemory].pageLockState()){
-                mainmemory.slots[firstFreeIndexInMainMemory].lock();
-                mainmemory.slots[firstFreeIndexInMainMemory].write(pageToStore, clockTime);
-            }
-            // The slot has been stolen by another process, try again
-            else{
-                Store(variableId, variableValue, clockTime);
-            }
+        int existingIndex = getExistingVariableIndex(variableId);
+        if(existingIndex != -1){
+            mainmemory.slots[existingIndex].write(pageToStore, clockTime);
         }
         else{
-            disk.write(pageToStore);
+            int firstFreeIndexInMainMemory = getFirstFreeMainMemorySlotIndex();
+            // There is a free slot in main memory, store it there
+            if(firstFreeIndexInMainMemory != -1){
+                // Check that lock is still opened
+                if(!mainmemory.slots[firstFreeIndexInMainMemory].pageLockState()){
+                    mainmemory.slots[firstFreeIndexInMainMemory].lock();
+                    mainmemory.slots[firstFreeIndexInMainMemory].write(pageToStore, clockTime);
+                }
+                // The slot has been stolen by another process, try again
+                else{
+                    Store(variableId, variableValue, clockTime);
+                }
+            }
+            else{
+                App.printToConsoleAndLog("Storing to Disk");
+                disk.write(pageToStore);
+            }
         }
     }
 
@@ -67,6 +73,13 @@ public class VirtualMemoryManager {
     private int getFirstFreeMainMemorySlotIndex(){
         return IntStream.range(0, mainmemory.slots.length)
         .filter(x -> !mainmemory.slots[x].pageLockState())
+        .findFirst()
+        .orElse(-1);
+    }
+
+    private int getExistingVariableIndex(String Id){
+        return IntStream.range(0, mainmemory.slots.length)
+        .filter(x -> mainmemory.slots[x].getId().equals(Id))
         .findFirst()
         .orElse(-1);
     }

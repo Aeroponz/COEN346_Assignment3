@@ -93,30 +93,34 @@ class ParallelTask implements Runnable{
 
     ParallelTask(String name, int remaining){
         processName = name;
-        remainingTime = remaining;
+        remainingTime = remaining * 1000;
     }
 
     @Override
     public void run() {
         executeACommand();
-        // long min = 1000L;
-        // long max = 5000L;
-        // long random = min + (long) (Math.random() * (max - min));
-        // while(true){
-        //     if(random >= remainingTime * 1000){
-        //         break;
-        //     }
-        //     else
-        //     {
-        //         try {
-        //             Thread.sleep(random);
-        //         } catch (InterruptedException e) {
-        //             e.printStackTrace();
-        //         }
-        //         executeACommand();
-        //         random = min + (long) (Math.random() * (max - min));
-        //     }
-        // }
+        long min = 900L;
+        long max = 1000L;
+        long random = min + (long) (Math.random() * (max - min));
+        while(true){
+            //App.printToConsoleAndLog("RANDOM: " + random + " REMAINING: " + remainingTime);
+            if(random >= remainingTime){
+                //App.printToConsoleAndLog("Break out!");
+                break;
+            }
+            else
+            {
+                try {
+                    //App.printToConsoleAndLog("Zzzzzzzzzzzz for " + random);
+                    remainingTime -= random;
+                    Thread.sleep(random);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                executeACommand();
+                random = min + (long) (Math.random() * (max - min));
+            }
+        }
     }
 
     private void executeACommand(){
