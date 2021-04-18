@@ -43,9 +43,9 @@ public class App {
         /* 3 Tasks -> 3 Threads. */
         // Thread 1: Clock - Timer 1000ms
         Clock_Tick clock = new Clock_Tick();
-        // Thread 2: Memory Management Unit - Timer 1000ms (Initial delay of 50ms)
+        // Thread 2: Memory Management Unit - Timer 50ms (Initial delay of 20ms)
         MemoryManagementUnit memoryManagementUnit = new MemoryManagementUnit();
-        // Thread 3: Scheduler - Timer 1000ms (Initial delay of 500ms, this way scheduler doesn't overlap with memory management unit)
+        // Thread 3: Scheduler - Timer 1000ms (Initial delay of 10ms, this way scheduler doesn't overlap with clock)
         Scheduler scheduler = new Scheduler();
 
         // Initialise Timer and start the threads

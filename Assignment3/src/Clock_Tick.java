@@ -12,12 +12,17 @@ class Clock_Tick extends TimerTask {
         timeLock = new ReentrantReadWriteLock();
 
     }
+
+    /**
+     * Method ran on the clock thread
+     */
     public void run() {
        clock_tick();
     }
 
     /**
      * Called on each clock thread tick
+     * Requires write lock to increment time
      */
     public static void clock_tick() {
         timeLock.writeLock().lock();
@@ -28,6 +33,11 @@ class Clock_Tick extends TimerTask {
         }
     }
 
+    /**
+     * Returns the floor of the time (1000ms increments).
+     * Requires read lock to read clockTime.
+     * @return
+     */
     public static int getClockTicks(){
         timeLock.readLock().lock();
         try {
@@ -37,6 +47,10 @@ class Clock_Tick extends TimerTask {
         }
     }
 
+    /**
+     * Returns the actual clock time
+     * @return
+     */
     public static long getClockTime() {
         return Duration.between(start, Instant.now()).toMillis() + 1000;
     }

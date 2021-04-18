@@ -10,6 +10,11 @@ public final class DiskStorage {
         createVmFile();
     }
 
+    /**
+     * Moves a page from disk to main memory
+     * @param id Page Id to be returned
+     * @return Page stored in disk storage
+     */
     public Page move(String id) {
         var pages = readFile();
         int index = IntStream.range(0, pages.size())
@@ -27,16 +32,28 @@ public final class DiskStorage {
         }
     }
 
+    /**
+     * Add a page to the disk storage
+     * @param page
+     */
     public void write(Page page) {
         appendToFile(page);
     }
 
+    /**
+     * Delete a page from the disk storage
+     * @param id Page to be deleted
+     */
     public void delete(String id){
         // Move deletes the variable on the drive after passing it to the virtual memory manager
         // if we don't return it, it will be deleted
         move(id);
     }
 
+    /**
+     * Helper function used at instantiation to delete (if possible) the old vm.txt file
+     * and create the new one.
+     */
     private void createVmFile(){
         try {
             if (vm.delete()) { 
@@ -51,6 +68,10 @@ public final class DiskStorage {
           }
     }
 
+    /**
+     * Helper function to append a page to the disk storage
+     * @param page Page to be added
+     */
     private void appendToFile(Page page){
         try {
             FileWriter vm = new FileWriter("vm.txt");
@@ -62,6 +83,10 @@ public final class DiskStorage {
           }
     }
 
+    /**
+     * Overrides all the vm.txt file with the modified pages data
+     * @param pages Parsed and (possibly modified) pages data
+     */
     private void writeToFile(ArrayList<Page> pages) {
         try {
             FileWriter vm = new FileWriter("vm.txt");
@@ -75,6 +100,10 @@ public final class DiskStorage {
           }
     }
 
+    /**
+     * Returns all pages found in the vm.txt file
+     * @return
+     */
     private ArrayList<Page> readFile(){
         var output = new ArrayList<Page>();
         try {

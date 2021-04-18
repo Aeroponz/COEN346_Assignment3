@@ -1,8 +1,10 @@
-import java.util.ArrayList;
 import java.util.TimerTask;
 
 class MemoryManagementUnit extends TimerTask {
 
+    /**
+     * Method ran on the MMU thread
+     */
     public void run() {
        mmu_tick();
     }
@@ -13,7 +15,6 @@ class MemoryManagementUnit extends TimerTask {
     public static void mmu_tick() {
         if(!App.vmmCommandWaitingList.isEmpty()){
             var command = App.vmmCommandWaitingList.remove();
-            //Before executing the command, make sure that process hasn't been terminated between the API call and its execution.
             switch (command.type) {
                 case Store:
                     App.vmm.lock.writeLock().lock();

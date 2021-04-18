@@ -7,10 +7,22 @@ public final class MainMemory {
         }
     }
 
+    /**
+     * Read in main memory
+     * @param slotIndex Read at index
+     * @param clockTime Timestamp (ms)
+     * @return variable value
+     */
     public long read(int slotIndex, int clockTime){
         return slots[slotIndex].read(clockTime);
     }
 
+    /**
+     * Write to main memory
+     * @param page Page to write
+     * @param slotIndex Write at index
+     * @param clockTime Timestamp (ms)
+     */
     public void write(Page page, int slotIndex, long clockTime){
         slots[slotIndex].write(page, clockTime);
     }

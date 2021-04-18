@@ -5,6 +5,9 @@ import java.util.stream.*;
  * This class simulates the scheduler. It extends TimerTask to facilitate the periodicity of this work.
  */
 class Scheduler extends TimerTask {
+    /**
+     * Method ran in the scheduler thread
+     */
     public void run() {
        scheduler_tick();
     }

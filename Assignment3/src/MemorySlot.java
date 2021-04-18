@@ -24,20 +24,40 @@ public class MemorySlot {
     public boolean pageLockState() {
         return page.getLock();
     }
+
+    /**
+     * Helper method used when swapping to disk storage
+     * @return
+     */
     public Page getPageForSwap(){
         return page;
     }
 
     // ---- SETTERS ----
+    /**
+     * Store page in memory slot
+     * @param newPage Page to be stored
+     * @param clockTime Timestamp (ms)
+     */
     public void write(Page newPage, long clockTime) {
         lastAccessTime = clockTime;
         page = newPage;
     }
 
+    /**
+     * Lock the page. When locked, the page can't be overwritten. If a new variable
+     * needs to be added to the main memory, but no page is unlocked, a swap will occur.
+     * If a page is unlocked (variable has been released), the page will be squashed.
+     */
     public void lock(){
         page.setLock(false);
     }
 
+    /**
+     * Unlock the page. When unlocked, the page can be overwritten. If a new variable
+     * needs to be added to the main memory, but no page is unlocked, a swap will occur.
+     * If a page is unlocked (variable has been released), the page will be squashed.
+     */
     public void unlock(){
         page.setLock(false);
     }
