@@ -121,39 +121,8 @@ class ParallelTask implements Runnable{
 
     private void executeACommand(){
         var command = App.nextCommand();
-        switch (command.type) {
-            case Store:
-                App.vmmLock.writeLock().lock();
-                try {
-                    App.vmm.Store(String.valueOf(command.variableId), command.variableValue, Clock_Tick.getClockTime());
-                } finally {
-                    App.vmmLock.writeLock().unlock();
-                }
-                break;
-            
-            case Release:
-                App.vmmLock.writeLock().lock();
-                try {
-                    App.vmm.Release(String.valueOf(command.variableId));
-                } finally {
-                    App.vmmLock.writeLock().unlock();
-                }
-                break;
-
-            case Lookup:
-                App.vmmLock.readLock().lock();
-                try {
-                    var value = App.vmm.Lookup(String.valueOf(command.variableId), Clock_Tick.getClockTime());
-                    command.variableValue = value;
-                } finally {
-                    App.vmmLock.readLock().unlock();
-                }
-                break;
-        
-            default:
-                throw new Error("Unkown Commands");
-        }
-        App.printToConsoleAndLog("Process " + processName + ", " + command.print());
+        command.caller=processName;
+        App.vmmCommandWaitingList.add(command);
     }
  
 }

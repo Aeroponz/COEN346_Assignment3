@@ -1,4 +1,4 @@
-public class MainMemory {
+public final class MainMemory {
     // ---- CONSTRUCTOR ----
     public MainMemory(int pagesCapacity){
         slots = new MemorySlot[pagesCapacity];

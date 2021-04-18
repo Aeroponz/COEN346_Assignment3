@@ -23,18 +23,15 @@ public class App {
 
     /* -- Commands -- */
     public static Queue<Command> commands = new LinkedList<Command>();
+    public static Queue<Command> vmmCommandWaitingList = new LinkedList<Command>();
 
     /* -- CPU -- */
     public static int CPU_CORES;
-
     public static ArrayList<Process> runningJobs = new ArrayList<Process>();
 
     /* -- Scheduler -- */
     public static ArrayList<Process> readyQueue = new ArrayList<Process>();
-
-    /* -- Locks -- */
     public static ReadWriteLock readyQueueLock = new ReentrantReadWriteLock();
-    public static ReadWriteLock vmmLock = new ReentrantReadWriteLock();
 
 
     public static void main(String[] args) throws Exception {
@@ -47,15 +44,15 @@ public class App {
         // Thread 1: Clock - Timer 1000ms
         Clock_Tick clock = new Clock_Tick();
         // Thread 2: Memory Management Unit - Timer 1000ms (Initial delay of 50ms)
-        MemoryManagementUnit memoryManagementUnit = new MemoryManagementUnit(logger);
+        MemoryManagementUnit memoryManagementUnit = new MemoryManagementUnit();
         // Thread 3: Scheduler - Timer 1000ms (Initial delay of 500ms, this way scheduler doesn't overlap with memory management unit)
-        Scheduler scheduler = new Scheduler(logger);
+        Scheduler scheduler = new Scheduler();
 
         // Initialise Timer and start the threads
         Timer t = new Timer();
         t.schedule(clock, 0, 1000);
-        t.schedule(memoryManagementUnit, 50, 1000);
-        t.schedule(scheduler, 100, 1000);
+        t.schedule(scheduler, 10, 1000);
+        t.schedule(memoryManagementUnit, 20, 50);
     }
 
     /**
@@ -127,12 +124,19 @@ public class App {
         }
     }
 
+    /**
+     * Helper function to print to log with clock time appended
+     * @param msg Message to print to log
+     */
     public static void printToConsoleAndLog(String msg) {
-        //String timedStampedMsg = "Clock: " + Clock_Tick.getClockTime() + ", " + msg;
-        String timedStampedMsg = "Clock: " + Clock_Tick.getClockTicks() + ", " + msg;
+        String timedStampedMsg = "Clock: " + Clock_Tick.getClockTime() + ", " + msg;
         logger.info(timedStampedMsg);
     }
 
+    /**
+     * Returns the next command from the commands list for a process to execute
+     * @return Command to execute
+     */
     public static Command nextCommand(){
         if(!commands.isEmpty()){
             var next = commands.remove();

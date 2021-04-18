@@ -1,3 +1,4 @@
+import java.util.concurrent.locks.*;
 import java.util.stream.IntStream;
 
 public class VirtualMemoryManager {
@@ -15,7 +16,7 @@ public class VirtualMemoryManager {
         if(firstFreeIndexInMainMemory != -1){
             // Check that lock is still opened
             if(!mainmemory.slots[firstFreeIndexInMainMemory].pageLockState()){
-                mainmemory.slots[firstFreeIndexInMainMemory].toggleLock();
+                mainmemory.slots[firstFreeIndexInMainMemory].lock();
                 mainmemory.slots[firstFreeIndexInMainMemory].write(pageToStore, clockTime);
             }
             // The slot has been stolen by another process, try again
@@ -33,7 +34,7 @@ public class VirtualMemoryManager {
         // Variable to be released is in main memory
         if(indexInMainMemory != 1){
             // Toggle the lock, this will allow it to be overriden by the next page that needs to be loaded in the main memory
-            mainmemory.slots[indexInMainMemory].toggleLock();
+            mainmemory.slots[indexInMainMemory].unlock();
         }
         // Variable is in the disk. Delete it
         else{
@@ -82,8 +83,8 @@ public class VirtualMemoryManager {
         // There is a free slot in main memory, store it there
         if(firstFreeIndexInMainMemory != -1){
             // Check that lock is still opened
-            if(mainmemory.slots[firstFreeIndexInMainMemory].pageLockState()){
-                mainmemory.slots[firstFreeIndexInMainMemory].toggleLock();
+            if(!mainmemory.slots[firstFreeIndexInMainMemory].pageLockState()){
+                mainmemory.slots[firstFreeIndexInMainMemory].lock();
                 mainmemory.slots[firstFreeIndexInMainMemory].write(pageToLoad, clockTime);
             }
             // The slot has been stolen by another process, try again
@@ -101,11 +102,17 @@ public class VirtualMemoryManager {
                     smallestLastAccessTime = mainmemory.slots[i].lastAccessTime();
                 }
             }
+            App.printToConsoleAndLog("Memory Manager, SWAP: Variable " + mainmemory.slots[indexOfSmallestLastAccessTime].getId() + " with Variable "+ pageToLoad.getId());
+            var temp = mainmemory.slots[indexOfSmallestLastAccessTime];
+            var tempPage = temp.getPageForSwap();
             mainmemory.write(pageToLoad, indexOfSmallestLastAccessTime, clockTime);
+            Store(tempPage.getId(), tempPage.getValue(), temp.lastAccessTime());
         }
     }
     
     // ---- ATTRIBUTES ----
     private MainMemory mainmemory;
     private DiskStorage disk;
+    
+    public ReadWriteLock lock = new ReentrantReadWriteLock();
 }

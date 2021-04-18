@@ -24,6 +24,9 @@ public class MemorySlot {
     public boolean pageLockState() {
         return page.getLock();
     }
+    public Page getPageForSwap(){
+        return page;
+    }
 
     // ---- SETTERS ----
     public void write(Page newPage, long clockTime) {
@@ -31,8 +34,12 @@ public class MemorySlot {
         page = newPage;
     }
 
-    public void toggleLock(){
-        page.setLock(!page.getLock());
+    public void lock(){
+        page.setLock(false);
+    }
+
+    public void unlock(){
+        page.setLock(false);
     }
 
     

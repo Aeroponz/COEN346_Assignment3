@@ -3,6 +3,10 @@ import java.util.concurrent.locks.*;
 import java.time.*;
 
 class Clock_Tick extends TimerTask {
+
+    /**
+     * Constructor
+     */
     public Clock_Tick() {
         start = Instant.now();
         timeLock = new ReentrantReadWriteLock();

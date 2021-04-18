@@ -2,12 +2,14 @@ public class Page {
     // ---- CONSTRUCTOR ----
     public Page(String Id, long Value){
         id = Id;
-        value = Value; 
+        value = Value;
+        locked = true;
     }
 
     public Page(){
         id = "Not Found";
         value = -1;
+        locked = false;
     }
 
     // ---- ACCESSORS ----
@@ -36,5 +38,5 @@ public class Page {
     // ---- ATTRIBUTES ----
     private String id;
     private long value;
-    private boolean locked = false;
+    private boolean locked;
 }
